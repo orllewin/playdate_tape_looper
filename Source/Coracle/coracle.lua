@@ -66,8 +66,16 @@ function leftPressed()
   return playdate.buttonIsPressed(playdate.kButtonLeft)
 end
 
+function leftJustPressed()
+  return playdate.buttonJustPressed(playdate.kButtonLeft)
+end
+
 function rightPressed()
   return playdate.buttonIsPressed(playdate.kButtonRight)
+end
+
+function rightJustPressed()
+  return playdate.buttonJustPressed(playdate.kButtonRight)
 end
 
 function background()
@@ -183,6 +191,14 @@ function circleV(vector, r)
 	  else
 		graphics.drawCircleAtPoint(vector.x, vector.y, r)
 	  end
+end
+
+function triangle(x1, y1, x2, y2, x3, y3)
+  if(coracleDrawMode == DrawingMode.Fill) then
+    graphics.fillTriangle(x1, y1, x2, y2, x3, y3)
+  else
+    graphics.drawTriangle(x1, y1, x2, y2, x3, y3)
+  end
 end
 
 function point(x, y)
