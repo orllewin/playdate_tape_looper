@@ -209,7 +209,6 @@ playdate.sound.getHeadphoneState(function()
 	end
 end)
 
-local recordFrame = 0
 local spindleAngle = 0
 
 local audLevel = 0.5
@@ -227,13 +226,15 @@ function playdate.update()
 	if aPressed() then
 		if state == RECORDING then return end
 		if state == LOAD_SAMPLE then
+			loopStartSet = false
+			loopEndSet = false
 			if selectedFile == nil then
 				state = STOPPED
 				toast("File source error")
 				return
 			end
 			print("loading sample: " .. selectedFile)
-			
+
 			if playdate.file.exists(selectedFile) then
 				print("File exists: " .. selectedFile)
 				buffer:load(selectedFile)
@@ -292,8 +293,7 @@ function playdate.update()
 			state = RECORDING
 			
 			loopStartSet = false
-			loopEndtSet = false
-			recordFrame = 0
+			loopEndSet = false
 			audMax = 0
 			
 			playdate.sound.micinput.startListening()
