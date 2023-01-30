@@ -1,4 +1,5 @@
 import 'Coracle/coracle'
+import 'Coracle/string_utils'
 import 'CoreLibs/graphics'
 import 'CoreLibs/easing'
 import 'CoreLibs/timer'
@@ -6,29 +7,6 @@ import 'CoreLibs/keyboard'
 import 'CoreLibs/sprites'
 import 'CoreLibs/ui'
 import 'CoreLibs/nineslice'
-
-function endswith(s, ending)
-		return ending == "" or s:sub(-#ending) == ending
-end
-
-function replace(s, old, new)
-		local search_start_idx = 1
-
-		while true do
-				local start_idx, end_idx = s:find(old, search_start_idx, true)
-				if (not start_idx) then
-						break
-				end
-
-				local postfix = s:sub(end_idx + 1)
-				s = s:sub(1, (start_idx - 1)) .. new .. postfix
-
-				search_start_idx = -1 * postfix:len()
-		end
-
-		return s
-end
-
 
 local font = playdate.graphics.font.new("font-rains-1x")
 local biggerFont = playdate.graphics.font.new("font-rains-2x")
@@ -48,6 +26,7 @@ playdate.timer.performAfterDelay(1425, startTapeLoading)
 function introFinished()
 	print("introFinished()")
 	state = STOPPED
+	toast("Ready")
 end
 
 local introFilePlayer = playdate.sound.fileplayer.new("intro_tape_action")
@@ -95,54 +74,99 @@ local menu = playdate.getSystemMenu()
 
 -- Add save sample menu
 local menuItem, error = menu:addMenuItem("Save Sample", function()
-		buffer:save(generateFilename("tr-", ".wav"))
-		buffer:save(generateFilename("tr-", ".pda"))
+		if buffer:getLength() == 0 then
+			toast("Empty buffer")
+		else
+			local pdaFilename = generateFilename("tr-", ".pda")
+			local wavFilename = replace(pdaFilename, ".pda", ".wav")
+			buffer:save(pdaFilename)
+			buffer:save(wavFilename)
+			toast(replace(pdaFilename, ".pda", ""))
+		end
 end)
 
 -- Add save loop sample
 local menuItem, error = menu:addMenuItem("Save Loop", function()
-		local loop = buffer:getSubsample(loopStartFrame, loopEndFrame)
-		loop:save(generateFilename("tl-", ".wav"))	
-		loop:save(generateFilename("tl-", ".pda"))	
+		if loopStartSet or loopEndSet then
+			
+			local pdaFilename = generateFilename("tl-", ".pda")
+			local wavFilename = replace(pdaFilename, ".pda", ".wav")
+			
+			if loopStartSet and loopEndSet then
+				-- Full loop
+				local loop = buffer:getSubsample(loopStartFrame, loopEndFrame)
+				loop:save(pdaFilename)	
+				loop:save(wavFilename)	
+			elseif loopStartSet then
+				-- Loop start only
+				local sampleRate = playdate.sound.getSampleRate()
+				local frames = samplePlayer:getLength() * sampleRate
+				local loop = buffer:getSubsample(loopStartFrame, frames)
+				loop:save(pdaFilename)	
+				loop:save(wavFilename)
+			else
+				-- Loop end only
+				local loop = buffer:getSubsample(0, loopEndFrame)
+				loop:save(pdaFilename)	
+				loop:save(wavFilename)
+			end
+			
+			toast(replace(pdaFilename, ".pda", ""))
+		else
+			toast("No loop set")
+		end
 end)
 
 -- Add load sample
 local menuItem, error = menu:addMenuItem("Load sample", function()
+		state = STOPPED
+		refreshLoadFiles()
 		state = LOAD_SAMPLE
 end)
 
 -- Show saved samples, must be in pda format.
 local loadWindowWidth = 392
-local files = playdate.file.listFiles()
-local wavs = {}
-print("--------------------------------------")
-print("Filesystem file count: " .. #files)
-for f=1, #files do
-	local file = files[f]
-	local type = playdate.file.getType(file)
-	
-	if type ~= nil and type == "audio" then
-		print("audio file: " .. file .. " type: " .. type)
-		table.insert(wavs, file)
-	end 
-end
 
-for w=1, #wavs do
-	local pdaFile = wavs[w]
-	print("stored audio file: " .. pdaFile)
-end
-print("--------------------------------------")
+local wavs = {}
 local selectedFile = nil
-local columCount = 1
+
 local loadSampleGridview = playdate.ui.gridview.new(loadWindowWidth-16, 25)
 
 loadSampleGridview.backgroundImage = playdate.graphics.nineSlice.new('shadowbox', 4, 4, 45, 45)
-loadSampleGridview:setNumberOfColumns(columCount)
-loadSampleGridview:setNumberOfRows(#wavs)
+loadSampleGridview:setNumberOfColumns(1)
 loadSampleGridview:setSectionHeaderHeight(28)
 loadSampleGridview:setContentInset(4, 4, 4, 4)--left, right, top, bottom
 loadSampleGridview:setCellPadding(4, 4, 2, 2)--left, right, top, bottom
 loadSampleGridview.changeRowOnColumnWrap = false
+
+function refreshLoadFiles()
+	print("refreshLoadFiles()")
+	local files = playdate.file.listFiles()
+	for i, v in ipairs(wavs) do wavs[i] = nil end
+
+	
+	print("--------------------------------------")
+	print("Filesystem file count: " .. #files)
+	for f=1, #files do
+		print("index: " .. f)
+		local file = files[f]
+		print("file: " .. file)
+	
+		if endswith(file, ".pda") then
+			print("audio file: " .. file)
+			table.insert(wavs, file)
+		end 
+	end
+	
+	for w=1, #wavs do
+		local pdaFile = wavs[w]
+		print("stored audio file: " .. pdaFile)
+	end
+	print("--------------------------------------")
+	selectedFile = nil
+	loadSampleGridview:setNumberOfRows(#wavs)
+	
+end
 
 function loadSampleGridview:drawCell(section, row, column, selected, x, y, width, height)
 		
@@ -203,20 +227,41 @@ function playdate.update()
 	if aPressed() then
 		if state == RECORDING then return end
 		if state == LOAD_SAMPLE then
+			if selectedFile == nil then
+				state = STOPPED
+				toast("File source error")
+				return
+			end
 			print("loading sample: " .. selectedFile)
-			buffer = playdate.sound.sample.new(selectedFile)
 			
 			if playdate.file.exists(selectedFile) then
 				print("File exists: " .. selectedFile)
+				buffer:load(selectedFile)
+				
+				if(buffer == nil)then
+					state = STOPPED
+					toast("Error loading sample")
+					buffer = playdate.sound.sample.new(120, playdate.sound.kFormat16bitMono)
+					
+				else
+					--samplePlayer:setSample(buffer)
+					toast("Sample loaded")
+				end
+
 			else
 				print("File not available: " .. selectedFile)
 			end
 			
-			samplePlayer:setSample(buffer)
-			toast("Sample loaded")
+			
 			state = PAUSED
 			return
 		end
+		
+		if buffer:getLength() == 0 then
+			toast("Empty buffer")
+			return
+		end
+		
 		if samplePlayer:isPlaying() then
 			samplePlayer:stop()
 			state = PAUSED
@@ -253,6 +298,8 @@ function playdate.update()
 			
 			playdate.sound.micinput.startListening()
 			playdate.sound.micinput.recordToSample(buffer, onComplete)
+			
+			toast("Recording")
 			
 		end
 	end
