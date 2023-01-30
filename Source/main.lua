@@ -169,7 +169,7 @@ function loadSampleGridview:drawSectionHeader(section, x, y, width, height)
 		playdate.graphics.drawText("Load sample", x + 6, y + 6)
 end
 
--- End of Sample Gridview ----------------------------------------------------------
+-- End of Gridview ----------------------------------------------------------
 
 local gain = 1.0
 local effect = playdate.sound.overdrive.new()
@@ -421,7 +421,7 @@ function playdate.update()
 	
 	if showToast then
 			playdate.graphics.setFont(biggerFont)
-			text(toastMessage, 34, 141)
+			playdate.graphics.drawTextInRect(toastMessage, 0, 142, 400, 30, nil, "...", kTextAlignment.center)
 	end
 	
 	
