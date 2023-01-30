@@ -9,7 +9,7 @@ import 'CoreLibs/ui'
 import 'CoreLibs/nineslice'
 
 local font = playdate.graphics.font.new("font-rains-1x")
-local biggerFont = playdate.graphics.font.new("font-rains-2x")
+local biggerFont = playdate.graphics.font.new("Roobert-11-Medium")
 
 
 local INTRO, TAPE_LOADING, STOPPED, RECORDING, PLAYING, PAUSED, LOAD_SAMPLE = 0, 1, 2, 3, 4, 5, 6, 7
@@ -46,6 +46,7 @@ local loopEndFrame = -1
 local toastMessage = ""
 local showToast = false
 local toastTimer = nil
+local toastYAnchor = 138
 
 local loadTapeImage = playdate.graphics.image.new("load_tape")
 local tapeImage = playdate.graphics.image.new("tape")
@@ -278,6 +279,10 @@ function playdate.update()
 	end
 
 	if bPressed() then
+		if state == LOAD_SAMPLE then
+			state = STOPPED
+			return
+		end
 		if state == RECORDING then
 			playdate.sound.micinput.stopListening()
 			playdate.sound.micinput.stopRecording()
@@ -468,7 +473,7 @@ function playdate.update()
 	
 	if showToast then
 			playdate.graphics.setFont(biggerFont)
-			playdate.graphics.drawTextInRect(toastMessage, 0, 142, 400, 30, nil, "...", kTextAlignment.center)
+			playdate.graphics.drawTextInRect(toastMessage, 0, toastYAnchor, 400, 30, nil, "...", kTextAlignment.center)
 	end
 	
 	
