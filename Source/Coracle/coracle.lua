@@ -58,6 +58,10 @@ function upPressed()
   return playdate.buttonIsPressed(playdate.kButtonUp)
 end
 
+function upJustPressed()
+  return playdate.buttonJustPressed(playdate.kButtonUp)
+end
+
 function downPressed()
   return playdate.buttonIsPressed(playdate.kButtonDown)
 end
@@ -164,6 +168,14 @@ function rect(x, y, width, height)
     graphics.fillRect(x, y, width, height)
   else
     graphics.drawRect(x, y, width, height)
+  end
+end
+
+function roundedRect(x, y, width, height, cornerRadius)
+  if(coracleDrawMode == DrawingMode.Fill) then
+    graphics.fillRoundRect(x, y, width, height, cornerRadius)
+  else
+    graphics.drawRoundRect(x, y, width, height, cornerRadius)
   end
 end
 

@@ -1,8 +1,8 @@
 name=Tape Looper
 author=Orllewin
-description=Aodio looper toy.
+description=Audio looper toy.
 bundleID=orllewin.playdate.tape_looper
 version=1.0.0
 imagePath=card.png
 pdxversion=11200
-buildtime=728391718
+buildtime=728420690
