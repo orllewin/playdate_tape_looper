@@ -61,7 +61,7 @@ spindleSpriteRight:moveTo(284, 102)
 spindleSpriteRight:add()
 
 playdate.graphics.sprite.setBackgroundDrawingCallback(
-		function( x, y, width, height )
+		function(x, y, width, height)
 				playdate.graphics.setClipRect( x, y, width, height ) 
 				tapeImage:draw( 0, 0 )
 				playdate.graphics.clearClipRect()
@@ -196,11 +196,6 @@ end
 
 -- End of Gridview ----------------------------------------------------------
 
-local gain = 1.0
-local effect = playdate.sound.overdrive.new()
-effect:setMix(1)
-effect:setGain(5)
-playdate.sound.addEffect(effect)
 
 playdate.sound.getHeadphoneState(function() 
 	if playdate.isSimulator then
@@ -238,18 +233,27 @@ function playdate.update()
 
 			if playdate.file.exists(selectedFile) then
 				print("File exists: " .. selectedFile)
-				buffer:load(selectedFile)
+				--buffer:load(selectedFile)
+				--local newBuffer, error = playdate.sound.sample.new(selectedFile)
+				buffer, error = playdate.sound.sample.new(selectedFile)
+				
+			if(error ~= null) then 
+				print("Error loading sample" .. error) 
+				
+			else
+				--buffer = newBuffer
+			end
 				
 				if(buffer == nil)then
-					state = STOPPED
+					
 					toast("Error loading sample")
 					buffer = playdate.sound.sample.new(120, playdate.sound.kFormat16bitMono)
 					
 				else
-					--samplePlayer:setSample(buffer)
+					samplePlayer:setSample(buffer)
 					toast("Sample loaded")
 				end
-
+					state = STOPPED
 			else
 				print("File not available: " .. selectedFile)
 			end
@@ -313,9 +317,11 @@ function playdate.update()
 	if(change > 0) then
 		playbackRate += 0.05
 		samplePlayer:setRate(playbackRate)
+		toast("Speed: " .. round(playbackRate, 2))
 	elseif (change < 0) then
 		playbackRate -= 0.05
 		samplePlayer:setRate(playbackRate)
+		toast("Speed: " .. round(playbackRate, 2))
 	end
 
 	if state == PLAYING then
@@ -485,9 +491,11 @@ end
 -- Methods -----------------------------------------------------------------------
 function playFromCuePoint()
 	if loopStartSet then
+		print("playFromCuePoint() with offset")
 		samplePlayer:play(0)
 		samplePlayer:setOffset(loopStart)
 	else
+		print("playFromCuePoint() play(0)")
 		samplePlayer:play(0)
 	end
 end
@@ -515,6 +523,15 @@ end
 function playdate.upButtonUp()
 	if state == LOAD_SAMPLE then
 		loadSampleGridview:selectPreviousRow(true)
+		return
+	end
+	
+	if samplePlayer:isPlaying() then
+		samplePlayer:stop()
+		state = PAUSED
+		playFromCuePoint()
+		setLoopPoints()
+		state = PLAYING
 	end
 end
 
@@ -560,4 +577,9 @@ end
 local months = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}
 function getMonth(index)
 	return months[index]
+end
+
+function round(number, decimalPlaces)
+		local mult = 10^(decimalPlaces or 0)
+		return math.floor(number * mult + 0.5)/mult
 end
