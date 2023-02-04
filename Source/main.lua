@@ -196,15 +196,6 @@ end
 
 -- End of Gridview ----------------------------------------------------------
 
-
-playdate.sound.getHeadphoneState(function() 
-	if playdate.isSimulator then
-		playdate.sound.setOutputsActive(true, true)
-	else
-		playdate.sound.setOutputsActive(false, true)
-	end
-end)
-
 local spindleAngle = 0
 
 local audLevel = 0.5
