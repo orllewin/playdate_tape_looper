@@ -8,8 +8,8 @@ import 'CoreLibs/sprites'
 import 'CoreLibs/ui'
 import 'CoreLibs/nineslice'
 
-local font = playdate.graphics.font.new("font-rains-1x")
-local biggerFont = playdate.graphics.font.new("Roobert-11-Medium")
+local font = playdate.graphics.font.new("Fonts/font-rains-1x")
+local biggerFont = playdate.graphics.font.new("Fonts/Roobert-11-Medium")
 
 
 local INTRO, TAPE_LOADING, STOPPED, RECORDING, PLAYING, PAUSED, LOAD_SAMPLE = 0, 1, 2, 3, 4, 5, 6, 7
@@ -29,7 +29,7 @@ function introFinished()
 	toast("Ready")
 end
 
-local introFilePlayer = playdate.sound.fileplayer.new("intro_tape_action")
+local introFilePlayer = playdate.sound.fileplayer.new("Audio/intro_tape_action")
 introFilePlayer:setFinishCallback(introFinished)
 introFilePlayer:play()
 
@@ -48,9 +48,9 @@ local showToast = false
 local toastTimer = nil
 local toastYAnchor = 138
 
-local loadTapeImage = playdate.graphics.image.new("load_tape")
-local tapeImage = playdate.graphics.image.new("tape")
-local spindleImage = playdate.graphics.image.new("spindle")
+local loadTapeImage = playdate.graphics.image.new("Images/load_tape")
+local tapeImage = playdate.graphics.image.new("Images/tape")
+local spindleImage = playdate.graphics.image.new("Images/spindle")
 local spindleSpriteLeft = playdate.graphics.sprite.new(spindleImage)
 local spindleSpriteRight = playdate.graphics.sprite.new(spindleImage)
 
@@ -133,7 +133,7 @@ local selectedFile = nil
 
 local loadSampleGridview = playdate.ui.gridview.new(loadWindowWidth-16, 25)
 
-loadSampleGridview.backgroundImage = playdate.graphics.nineSlice.new('shadowbox', 4, 4, 45, 45)
+loadSampleGridview.backgroundImage = playdate.graphics.nineSlice.new('Images/shadowbox', 4, 4, 45, 45)
 loadSampleGridview:setNumberOfColumns(1)
 loadSampleGridview:setSectionHeaderHeight(28)
 loadSampleGridview:setContentInset(4, 4, 4, 4)--left, right, top, bottom
@@ -534,6 +534,14 @@ function playdate.downButtonUp()
 
 	if state == LOAD_SAMPLE then
 		loadSampleGridview:selectNextRow(true)
+		return
+	end
+	
+	if samplePlayer:isPlaying() then
+		--reset playback rate
+		playbackRate = 1.0
+		samplePlayer:setRate(playbackRate)
+		toast("Speed reset")
 	end
 	
 end
