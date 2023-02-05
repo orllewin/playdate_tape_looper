@@ -155,7 +155,11 @@ function refreshLoadFiles()
 	
 		if endswith(file, ".pda") then
 			print("audio file: " .. file)
-			table.insert(wavs, file)
+			
+			--Don't add the intro sound, it glitches as a sample, possibly due to being loaded into the sample player already
+			if(file ~= "intro_tape_action.pda")then
+				table.insert(wavs, file)
+			end
 		end 
 	end
 	
