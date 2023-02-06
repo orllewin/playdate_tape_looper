@@ -4,10 +4,9 @@ import 'Audio/sample_buffer'
 
 class('Recorder').extends()
 
-function Recorder:init(sampleBuffer)
+function Recorder:init(recordingListener)
 	Recorder.super.init(self)
-	
-	self.sampleBuffer = sampleBuffer
+	self.recordingListener = recordingListener
 	self.levelsListener = nil
 	self.listening = false
 	self.recording = false
@@ -30,17 +29,25 @@ function Recorder:stopListening()
 	self.listening = false
 end
 
-function Recorder:startRecording(recordingListener)
+function Recorder:startRecording(buffer)
 	assert(self.listening, "You need to start listening before you can record")
-	self.recordingListener = recordingListener
+	self.buffer = buffer
+	
 	self.recording = true
 	
-	playdate.sound.micinput.recordToSample(self.sampleBuffer, function(sample)
+	playdate.sound.micinput.recordToSample(buffer, function(sample)
 		print("Recording complete...")
 		self.recording = false
 		if self.recordingListener ~= nil then self.recordingListener(false, 0) end
 	end)
 end
+
+function Recorder:getBuffer()
+	return self.buffer
+end
+
+function Recorder:push() playdate.inputHandlers.push(self:getInputHandler()) end
+function Recorder:pop() playdate.inputHandlers.pop() end
 
 function Recorder:stopRecording()
 	playdate.sound.micinput.stopRecording()
@@ -56,6 +63,7 @@ function Recorder:isNotRecording()
 end
 
 function Recorder:update()
+	if(self:isNotRecording()) then return end
 	self.audLevel = playdate.sound.micinput.getLevel()
 	if(self.audLevel > self.audMax) then self.audMax = self.audLevel end
 	self.audFrame += 1
@@ -69,11 +77,24 @@ function Recorder:update()
 	
 	if self.recordingListener ~= nil then
 		if self.recording then
-			local recorded, max = self.sampleBuffer:getLength()
+			local recorded, max = self.buffer:getLength()
 			self.recordingListener(true, recorded)
 		else
 			self.recordingListener(false, 0)
 		end
 	end
+end
+
+function Recorder:getInputHandler()
+	return {
+		BButtonDown = function()
+			if(self.recording)then
+				self:stopRecording()
+			else
+				if(self.onStartRecording ~= nil)then self.onStartRecording() end
+			end
+			
+		end
+	}
 end
 

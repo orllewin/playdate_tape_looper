@@ -3,10 +3,14 @@ class('AudioFileBrowser').extends()
 local loadWindowWidth = 392
 local audioFiles = {}
 local selectedFile = nil
+local font = nil
 
-function AudioFileBrowser:init()
+function AudioFileBrowser:init(_font)
 	AudioFileBrowser.super.init(self)
 	
+	self.displaying = false
+	
+	font = _font
 	self.loadSampleGridview = playdate.ui.gridview.new(loadWindowWidth-16, 25)
 	self.loadSampleGridview.backgroundImage = playdate.graphics.nineSlice.new('Images/shadowbox', 4, 4, 45, 45)
 	self.loadSampleGridview:setNumberOfColumns(1)
@@ -30,18 +34,24 @@ function AudioFileBrowser:init()
 			local filename = tostring(file)
 			local cellText = replace(filename, "_", " ")--Playdate turns _text_ into italics... so strip any underscores out
 			--playdate.graphics.setFont(font)
-			text("" .. row .. ". " .. cellText, x + 8, y + 9)
+			font:drawText("" .. row .. ". " .. cellText, x + 8, y + 9)
 	end
 	
 	function self.loadSampleGridview:drawSectionHeader(section, x, y, width, height)
 			--playdate.graphics.setFont(biggerFont)
-			playdate.graphics.drawText("Choose sample:", x + 6, y + 6)
+			font:drawText("Choose sample:", x + 6, y + 6)
 	end
 
 end
 
+function AudioFileBrowser:isDisplaying()
+	return self.displaying
+end
+
 function AudioFileBrowser:chooseFile(onFileListener)
 	self.onFileListener = onFileListener
+	
+	self.displaying = true
 	--clear previous results (user may have saved files since chooser was last shown)
 	for i, v in ipairs(audioFiles) do audioFiles[i] = nil end
 	
@@ -78,13 +88,14 @@ function AudioFileBrowser:getInputHandler()
 			self.loadSampleGridview:selectNextRow(true)
 		end,
 		AButtonDown = function()
+				self.displaying = false
 				if(self.onFileListener ~= nil)then self.onFileListener(selectedFile) end
-				playdate.inputHandlers.pop()
 		end,
 		BButtonDown = function()
 			--Cancel
 			selectedFile = nil
 			playdate.inputHandlers.pop()
+			self.displaying = false
 		end
 	}
 end
