@@ -1,0 +1,94 @@
+class('AudioFileBrowser').extends()
+
+local loadWindowWidth = 392
+local audioFiles = {}
+local selectedFile = nil
+
+function AudioFileBrowser:init()
+	AudioFileBrowser.super.init(self)
+	
+	self.loadSampleGridview = playdate.ui.gridview.new(loadWindowWidth-16, 25)
+	self.loadSampleGridview.backgroundImage = playdate.graphics.nineSlice.new('Images/shadowbox', 4, 4, 45, 45)
+	self.loadSampleGridview:setNumberOfColumns(1)
+	self.loadSampleGridview:setSectionHeaderHeight(28)
+	self.loadSampleGridview:setContentInset(4, 4, 4, 4)--left, right, top, bottom
+	self.loadSampleGridview:setCellPadding(4, 4, 2, 2)--left, right, top, bottom
+	self.loadSampleGridview.changeRowOnColumnWrap = false
+	
+	function self.loadSampleGridview:drawCell(section, row, column, selected, x, y, width, height)			
+			local file = audioFiles[row]
+			if selected then
+				selectedFile = file
+				fill(1)
+				roundedRect(x, y, width, height, 5)
+				playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+			else
+				fill(0)
+				playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillBlack)
+			end
+	
+			local filename = tostring(file)
+			local cellText = replace(filename, "_", " ")--Playdate turns _text_ into italics... so strip any underscores out
+			--playdate.graphics.setFont(font)
+			text("" .. row .. ". " .. cellText, x + 8, y + 9)
+	end
+	
+	function self.loadSampleGridview:drawSectionHeader(section, x, y, width, height)
+			--playdate.graphics.setFont(biggerFont)
+			playdate.graphics.drawText("Choose sample:", x + 6, y + 6)
+	end
+
+end
+
+function AudioFileBrowser:chooseFile(onFileListener)
+	self.onFileListener = onFileListener
+	--clear previous results (user may have saved files since chooser was last shown)
+	for i, v in ipairs(audioFiles) do audioFiles[i] = nil end
+	
+	local files = playdate.file.listFiles()
+	for f=1, #files do
+		local file = files[f]	
+		if endswith(file, ".pda") then
+				table.insert(audioFiles, file)
+		end
+	end
+	
+	for w=1, #audioFiles do
+		local pdaFile = audioFiles[w]
+	end
+	
+	selectedFile = nil
+	self.loadSampleGridview:setNumberOfRows(#audioFiles)
+	
+	playdate.inputHandlers.push(self:getInputHandler())
+end
+
+function AudioFileBrowser:getInputHandler()
+	return {
+		leftButtonDown = function()
+			--NOOP
+		end,
+		rightButtonDown = function()
+			--NOOP
+		end,
+		upButtonDown = function()
+			self.loadSampleGridview:selectPreviousRow(true)
+		end,
+		downButtonDown = function()
+			self.loadSampleGridview:selectNextRow(true)
+		end,
+		AButtonDown = function()
+				if(self.onFileListener ~= nil)then self.onFileListener(selectedFile) end
+				playdate.inputHandlers.pop()
+		end,
+		BButtonDown = function()
+			--Cancel
+			selectedFile = nil
+			playdate.inputHandlers.pop()
+		end
+	}
+end
+
+function AudioFileBrowser:draw()
+	self.loadSampleGridview:drawInRect(4, 4, loadWindowWidth, 232)
+end

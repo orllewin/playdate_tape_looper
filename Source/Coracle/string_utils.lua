@@ -19,3 +19,7 @@ function replace(s, old, new)
 
 		return s
 end
+
+function leftPad(number)
+	return string.format("%02d", number)
+end

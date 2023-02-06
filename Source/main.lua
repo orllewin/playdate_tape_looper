@@ -7,10 +7,18 @@ import 'CoreLibs/keyboard'
 import 'CoreLibs/sprites'
 import 'CoreLibs/ui'
 import 'CoreLibs/nineslice'
+import 'Audio/sample_buffer'
+import 'Audio/recorder'
+import 'Audio/player'
+import 'Files/file_browser'
+
+local sampleBuffer = SampleBuffer(playdate.sound.kFormat16bitMono, nil)
+local recorder = Recorder(sampleBuffer)
+local player = Player(sampleBuffer)
+local fileBrowser = AudioFileBrowser()
 
 local font = playdate.graphics.font.new("Fonts/font-rains-1x")
 local biggerFont = playdate.graphics.font.new("Fonts/Roobert-11-Medium")
-
 
 local INTRO, TAPE_LOADING, STOPPED, RECORDING, PLAYING, PAUSED, LOAD_SAMPLE = 0, 1, 2, 3, 4, 5, 6, 7
 local state = INTRO
@@ -121,84 +129,12 @@ end)
 -- Add load sample
 local menuItem, error = menu:addMenuItem("Load sample", function()
 		state = STOPPED
-		refreshLoadFiles()
+		fileBrowser:chooseFile(function(_selectedFile)
+			selectedFile = _selectedFile
+			print("File browser selected file: " .. selectedFile)
+		end)
 		state = LOAD_SAMPLE
 end)
-
--- Show saved samples, must be in pda format.
-local loadWindowWidth = 392
-
-local wavs = {}
-local selectedFile = nil
-
-local loadSampleGridview = playdate.ui.gridview.new(loadWindowWidth-16, 25)
-
-loadSampleGridview.backgroundImage = playdate.graphics.nineSlice.new('Images/shadowbox', 4, 4, 45, 45)
-loadSampleGridview:setNumberOfColumns(1)
-loadSampleGridview:setSectionHeaderHeight(28)
-loadSampleGridview:setContentInset(4, 4, 4, 4)--left, right, top, bottom
-loadSampleGridview:setCellPadding(4, 4, 2, 2)--left, right, top, bottom
-loadSampleGridview.changeRowOnColumnWrap = false
-
-function refreshLoadFiles()
-	print("refreshLoadFiles()")
-	local files = playdate.file.listFiles()
-	for i, v in ipairs(wavs) do wavs[i] = nil end
-
-	
-	print("--------------------------------------")
-	print("Filesystem file count: " .. #files)
-	for f=1, #files do
-		print("index: " .. f)
-		local file = files[f]
-		print("file: " .. file)
-	
-		if endswith(file, ".pda") then
-			print("audio file: " .. file)
-			
-			--Don't add the intro sound, it glitches as a sample, possibly due to being loaded into the sample player already
-			if(file ~= "intro_tape_action.pda")then
-				table.insert(wavs, file)
-			end
-		end 
-	end
-	
-	for w=1, #wavs do
-		local pdaFile = wavs[w]
-		print("stored audio file: " .. pdaFile)
-	end
-	print("--------------------------------------")
-	selectedFile = nil
-	loadSampleGridview:setNumberOfRows(#wavs)
-	
-end
-
-function loadSampleGridview:drawCell(section, row, column, selected, x, y, width, height)
-		
-		local file = wavs[row]
-		if selected then
-			selectedFile = file
-			fill(1)
-			roundedRect(x, y, width, height, 5)
-			playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
-		else
-			fill(0)
-			playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillBlack)
-		end
-
-		local filename = tostring(file)
-		local cellText = replace(filename, "_", " ")--Playdate turns _text_ into italics... so strip any underscores out
-		playdate.graphics.setFont(font)
-		text("" .. row .. ". " .. cellText, x + 8, y + 9)
-end
-
-
-function loadSampleGridview:drawSectionHeader(section, x, y, width, height)
-		playdate.graphics.setFont(biggerFont)
-		playdate.graphics.drawText("Load sample", x + 6, y + 6)
-end
-
--- End of Gridview ----------------------------------------------------------
 
 local spindleAngle = 0
 
@@ -242,7 +178,7 @@ function playdate.update()
 				if(buffer == nil)then
 					
 					toast("Error loading sample")
-					buffer = playdate.sound.sample.new(120, playdate.sound.kFormat16bitMono)
+					buffer = playdate.sound.sample.new(30, playdate.sound.kFormat16bitMono)--todo - was 120
 					
 				else
 					samplePlayer:setSample(buffer)
@@ -479,7 +415,7 @@ function playdate.update()
 	
 	
 	if(state == LOAD_SAMPLE)then
-		loadSampleGridview:drawInRect(4, 4, loadWindowWidth, 232)
+		fileBrowser:draw()
 	end
 end
 
@@ -516,10 +452,7 @@ function setLoopPoints()
 end
 
 function playdate.upButtonUp()
-	if state == LOAD_SAMPLE then
-		loadSampleGridview:selectPreviousRow(true)
-		return
-	end
+	if state == LOAD_SAMPLE then return end
 	
 	if samplePlayer:isPlaying() then
 		samplePlayer:stop()
@@ -532,10 +465,7 @@ end
 
 function playdate.downButtonUp()
 
-	if state == LOAD_SAMPLE then
-		loadSampleGridview:selectNextRow(true)
-		return
-	end
+	if state == LOAD_SAMPLE then return end
 	
 	if samplePlayer:isPlaying() then
 		--reset playback rate
@@ -544,19 +474,6 @@ function playdate.downButtonUp()
 		toast("Speed reset")
 	end
 	
-end
-
-function playdate.leftButtonUp()
-	if state == LOAD_SAMPLE then
-		loadSampleGridview:selectPreviousColumn(true)
-	end
-
-end
-
-function playdate.rightButtonUp()
-	if state == LOAD_SAMPLE then
-		loadSampleGridview:selectNextColumn(true)
-	end
 end
 
 function toast(message)
