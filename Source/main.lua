@@ -12,6 +12,7 @@ import 'Audio/sample_buffer'
 import 'Audio/recorder'
 import 'Audio/player'
 import 'Files/file_browser'
+import 'Files/file_output'
 import 'Views/toast'
 
 local font = playdate.graphics.font.new("Fonts/font-rains-1x")
@@ -57,6 +58,7 @@ idle:push()
 local fileBrowser = AudioFileBrowser(font)
 local toast = Toast(148, biggerFont)
 
+--todo - most of these are redundant:
 local INTRO, TAPE_LOADING, STOPPED, RECORDING, PLAYING, PAUSED, LOAD_SAMPLE, SAMPLE_LOADED = 0, 1, 2, 3, 4, 5, 6, 7, 8
 local state = INTRO
 
@@ -103,44 +105,19 @@ local menu = playdate.getSystemMenu()
 
 -- Add save sample menu
 local menuItem, error = menu:addMenuItem("Save Sample", function()
-		if buffer:getLength() == 0 then
+		if player:isEmpty() then
 			toast:setText("Empty buffer")
 		else
-			local pdaFilename = generateFilename("tr-", ".pda")
-			local wavFilename = replace(pdaFilename, ".pda", ".wav")
-			sampleBuffer:getBuffer():save(pdaFilename)
-			sampleBuffer:getBuffer():save(wavFilename)
-			toast:setText(replace(pdaFilename, ".pda", ""))
+			local savedFilename = FileOutput():exportAudioBothFormats(player:getBuffer())
+			toast:setText(replace(savedFilename, ".pda", ""))
 		end
 end)
 
 -- Add save loop sample
 local menuItem, error = menu:addMenuItem("Save Loop", function()
-		if loopStartSet or loopEndSet then
-			
-			local pdaFilename = generateFilename("tl-", ".pda")
-			local wavFilename = replace(pdaFilename, ".pda", ".wav")
-			
-			if loopStartSet and loopEndSet then
-				-- Full loop
-				local loop = buffer:getSubsample(loopStartFrame, loopEndFrame)
-				loop:save(pdaFilename)	
-				loop:save(wavFilename)	
-			elseif loopStartSet then
-				-- Loop start only
-				local sampleRate = playdate.sound.getSampleRate()
-				local frames = samplePlayer:getLength() * sampleRate
-				local loop = buffer:getSubsample(loopStartFrame, frames)
-				loop:save(pdaFilename)	
-				loop:save(wavFilename)
-			else
-				-- Loop end only
-				local loop = buffer:getSubsample(0, loopEndFrame)
-				loop:save(pdaFilename)	
-				loop:save(wavFilename)
-			end
-			
-			toast:setText(replace(pdaFilename, ".pda", ""))
+		if(not player:isEmpty() and player:hasLoop()) then
+			local savedFilename = FileOutput():exportAudioBothFormats(player:getLoopBuffer())
+			toast:setText(replace(savedFilename, ".pda", ""))
 		else
 			toast:setText("No loop set")
 		end
@@ -222,24 +199,4 @@ function playdate.update()
 	
 	recorder:update()
 	player:draw()
-end
-
--- Methods -----------------------------------------------------------------------
-
-function generateFilename(prefix, filetype)
-	local now = playdate.getTime()
-	local seconds, ms = playdate.getSecondsSinceEpoch()
-	local filename = "" .. prefix .. getMonth(now["month"]) .. "-" .. seconds .. filetype
-	print("generateFilename(): prefix: " .. prefix .. " filetype: " .. filetype .. " output: " .. filename)
-	return filename
-end
-
-local months = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}
-function getMonth(index)
-	return months[index]
-end
-
-function round(number, decimalPlaces)
-		local mult = 10^(decimalPlaces or 0)
-		return math.floor(number * mult + 0.5)/mult
 end

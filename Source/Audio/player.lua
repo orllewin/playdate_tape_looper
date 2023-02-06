@@ -29,6 +29,29 @@ function Player:hasLoopEnd()
 	return self.loopEndSet
 end
 
+function Player:hasLoop()
+	if self:hasLoopStart() or player:hasLoopEnd() then
+		return true
+	else
+		return false
+	end
+end
+
+function Player:getLoopBuffer()
+	if self:hasLoopStart() and self:hasLoopEnd() then
+		-- Full loop
+		return self.samplePlayer:getSubsample(self.loopStartFrame, self.loopEndFrame)
+	elseif self:hasLoopStart() then
+		-- Loop start only
+		local sampleRate = playdate.sound.getSampleRate()
+		local frames = samplePlayer:getLength() * sampleRate
+		return buffer:getSubsample(self.loopStartFrame, frames)
+	else
+		-- Loop end only
+		return buffer:getSubsample(0, self.loopEndFrame)
+	end
+end
+
 function Player:reset(buffer)
 	self.samplePlayer = playdate.sound.sampleplayer.new(buffer)
 	self.loopStartSet = false
@@ -39,6 +62,14 @@ function Player:softReset()
 	self.samplePlayer:setRate(1.0)
 	self.loopStartSet = false
 	self.loopEndSet = false
+end
+
+function Player:isEmpty()
+	if self.samplePlayer:getLength() == 0 then
+		return true
+	else
+		return false
+	end
 end
 
 function Player:play()
