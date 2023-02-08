@@ -59,7 +59,7 @@ local fileBrowser = AudioFileBrowser(font)
 local toast = Toast(148, biggerFont)
 
 --todo - most of these are redundant:
-local INTRO, TAPE_LOADING, STOPPED, RECORDING, PLAYING, PAUSED, LOAD_SAMPLE, SAMPLE_LOADED = 0, 1, 2, 3, 4, 5, 6, 7, 8
+local INTRO, TAPE_LOADING, STOPPED, LOAD_SAMPLE, SAMPLE_LOADED = 0, 1, 2, 3, 4, 5
 local state = INTRO
 
 function startTapeLoading()

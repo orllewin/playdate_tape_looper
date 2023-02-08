@@ -1,9 +1,5 @@
-# Playdate Tape Looper
+# Playdate: Tape Looper
 
-## TODO
+This project was originally thrown together over a few evenings, I didn't expect it to be as popular as it was. I've since refactored the terrible massive `main.lua` to have some semblance of encapsulation but it's still sub par.
 
-* Research TTRS (Tip/Ring/Ring/Sleeve) mic input: [help.play.date/hardware/supported-inputs/](https://help.play.date/hardware/supported-inputs/)
-
-## Bugs
-
-* If you set a loop point while outputting audio via 3.5mm the sound switches to the internal speaker... suspect native issue.
+[Orllewin Project Page](https://orllewin.github.io/playdate/tape_looper/)
