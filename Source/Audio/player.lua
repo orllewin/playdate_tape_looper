@@ -95,6 +95,10 @@ function Player:stop()
 	self.samplePlayer:stop()
 end
 
+function Player:setVolume(volume)
+	self.samplePlayer:setVolume(volume)
+end
+
 function Player:getLength()
 	return self.samplePlayer:getLength()
 end

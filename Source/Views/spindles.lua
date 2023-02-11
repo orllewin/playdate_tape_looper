@@ -19,10 +19,11 @@ function Spindles:init()
 	self.recGap = 160
 
 	self.mode = SPINDLE_REC
+	
 	local spindleImage = playdate.graphics.image.new("Images/large_spindle")
 	self.leftSpindle = playdate.graphics.sprite.new(spindleImage)
 	self.rightSpindle = playdate.graphics.sprite.new(spindleImage)
-	
+		
 	self:reposition()
 	self.leftSpindle:add()
 	self.rightSpindle:add()

@@ -26,9 +26,8 @@ import 'Views/visibility_manager'
 import 'Views/two_part_effect'
 import 'Views/vertical_slider'
 
- fff = playdate.graphics.font.new("Fonts/font-rains-1x")
- font = playdate.graphics.font.new("Fonts/font-rains-1x")
-
+fff = playdate.graphics.font.new("Fonts/font-rains-1x")--some bug or other, somewhere, fixed with a global font
+font = playdate.graphics.font.new("Fonts/font-rains-1x")
 
 local spindles = Spindles()
 local levels = RecordLevels()
@@ -41,18 +40,18 @@ local sound = playdate.sound
 
 local bitcrusherFx = sound.bitcrusher.new()
 sound.addEffect(bitcrusherFx)
-
-local overdriveFx = sound.overdrive.new()
-lfo = playdate.sound.lfo.new(playdate.sound.kWaveTriangle)
-overdriveFx:setOffsetMod(lfo)
-sound.addEffect(overdriveFx)
+bitcrusherFx:setAmount(0.0)
+bitcrusherFx:setMix(0.0)
 
 local ringmodFx = sound.ringmod.new()
 sound.addEffect(ringmodFx)
+ringmodFx:setFrequency(200)
+ringmodFx:setMix(0.0)
 
-local delayFx = sound.delayline.new(2)
-local delayTap = delayFx:addTap(1)
+local delayFx = sound.delayline.new(3)
+local delayTap = delayFx:addTap(1.5)
 sound.addEffect(delayFx)
+delayFx:setMix(0.0)
 
 local bitcrusherEffect = TwoPartEffect(font, Vector(fxX, fxY), "Crush", "Mix")
 bitcrusherEffect:setAmountListener(function(value)
@@ -69,20 +68,19 @@ end)
 ringmodEffect:setMixListener(function(value)
 	ringmodFx:setMix(value)
 end)
-local onePoleEffect = TwoPartEffect(font, Vector(fxX + (fxSpace * 2), fxY), "Delay", "Mix")
-onePoleEffect:setAmountListener(function(value)
+local delayEffect = TwoPartEffect(font, Vector(fxX + (fxSpace * 2), fxY), "F/back", "Mix")
+delayEffect:setAmountListener(function(value)
 	delayFx:setFeedback(value)
-	delayTap:setDelay(value + 1)
 end)
-onePoleEffect:setMixListener(function(value)
+delayEffect:setMixListener(function(value)
 	delayFx:setMix(value)
 end)
-local overdriveEffect = TwoPartEffect(font, Vector(fxX + (fxSpace * 3), fxY), "Drive", "Mix")
-overdriveEffect:setAmountListener(function(value)
-	overdriveFx:setGain(map(value, 0.0, 1.0, 0.0, 3.0))
+local delayTapEffect = TwoPartEffect(font, Vector(fxX + (fxSpace * 3), fxY), "Delay", "Tap Vol")
+delayTapEffect:setAmountListener(function(value)
+	delayTap:setDelay(map(value, 0.0, 1.0, 0.0, 3.0))
 end)
-overdriveEffect:setMixListener(function(value)
-	overdriveFx:setMix(value)
+delayTapEffect:setMixListener(function(value)
+	delayTap:setVolume(value)
 end)
 
 local focusManager = FocusManager()
@@ -111,7 +109,9 @@ end, function()
 	end
 end)
 
-volumeSlider = VerticalSlider(365, 145, 0.75)
+volumeSlider = VerticalSlider(365, 145, 1.0, function(volume)
+	player:setVolume(volume)
+end)
 
 playdate.graphics.setFont(font)
 
@@ -119,16 +119,16 @@ focusManager:addView(bitcrusherEffect:getTopFocusView(), 1)
 focusManager:addView(bitcrusherEffect:getBottomFocusView(), 2)
 focusManager:addView(ringmodEffect:getTopFocusView(), 1)
 focusManager:addView(ringmodEffect:getBottomFocusView(), 2)
-focusManager:addView(onePoleEffect:getTopFocusView(), 1)
-focusManager:addView(onePoleEffect:getBottomFocusView(), 2)
-focusManager:addView(overdriveEffect:getTopFocusView(), 1)
-focusManager:addView(overdriveEffect:getBottomFocusView(), 2)
+focusManager:addView(delayEffect:getTopFocusView(), 1)
+focusManager:addView(delayEffect:getBottomFocusView(), 2)
+focusManager:addView(delayTapEffect:getTopFocusView(), 1)
+focusManager:addView(delayTapEffect:getBottomFocusView(), 2)
 focusManager:addView(volumeSlider, 1)
 focusManager:addView(volumeSlider, 2)
 visibilityManager:addViews(bitcrusherEffect:getViews())
 visibilityManager:addViews(ringmodEffect:getViews())
-visibilityManager:addViews(onePoleEffect:getViews())
-visibilityManager:addViews(overdriveEffect:getViews())
+visibilityManager:addViews(delayEffect:getViews())
+visibilityManager:addViews(delayTapEffect:getViews())
 visibilityManager:addViews(volumeSlider:getViews())
 
 local recorder = Recorder(function(recording, elapsed)
@@ -164,7 +164,7 @@ idle:push()
 
 local fileBrowser = AudioFileBrowser(font)
 local fileOutput = FileOuput()
-local toast = Toast(148, font)
+local toast = Toast(232, font)
 
 --todo - most of these are redundant:
 local STOPPED, LOAD_SAMPLE, SAMPLE_LOADED = 0, 1, 2
@@ -206,6 +206,9 @@ local menuItem, error = menu:addMenuItem("Load sample", function()
 			player:reset(sampleBuffer:getBuffer())
 			playdate.inputHandlers.pop()
 			player:push()
+			spindles:playMode()
+			controls:setPlayReady()
+			visibilityManager:show()
 			toast.setText("" .. selectedFile .. " inserted")
 			print("File browser selected file: " .. selectedFile)
 			state= SAMPLE_LOADED

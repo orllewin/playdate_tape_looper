@@ -75,7 +75,7 @@ function VerticalSlider:turn(degrees)
 	if(self.value < 0.0) then self.value = 0.0 end
 	if(self.value > 1.0) then self.value = 1.0 end
 	self:redraw()
-	if(self.listener ~= nil)then self.listener(round(self:getValue(), 2)) end
+	if(self.listener ~= nil)then self.listener(round(self.value, 2)) end
 end
 
 function VerticalSlider:setFocus(focus)
