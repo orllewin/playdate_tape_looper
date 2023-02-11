@@ -9,7 +9,7 @@ end
 function FileOuput:exportAudioBothFormats(buffer)
 	local filename = self:generateFilenameNoSuffix()
 	buffer:save(filename .. ".wav")
-	buffer:save(filename .. ".pdi")
+	buffer:save(filename .. ".pda")
 	return filename
 end
 
@@ -19,19 +19,19 @@ function FileOuput:exportAudioWav(buffer)
 	return filename
 end
 
-function FileOuput:exportAudioPdi(buffer)
-	local filename = self:generateFilename(".pdi")
+function FileOuput:exportAudioPda(buffer)
+	local filename = self:generateFilename(".pda")
 	buffer:save(filename)
 	return filename
 end
 
-function Recorder:generateFilename(suffix)
+function FileOuput:generateFilename(suffix)
 	return generateFilenameNoSuffix() .. suffix
 end
 
-function Recorder:generateFilenameNoSuffix()
+function FileOuput:generateFilenameNoSuffix()
 	local now = playdate.getTime()
-	local filename = "" .. now["year"] .. "-" .. leftPad(now["month"]) .. "-" .. leftPad(now["day"]) .. "-" .. leftPad(now["hour"]) .. ":" .. leftPad(now["minute"]) .. ":" .. leftPad(now["second"])
+	local filename = "" .. now["year"] .. "-" .. leftPad(now["month"]) .. "-" .. leftPad(now["day"]) .. "-" .. leftPad(now["hour"]) .. "" .. leftPad(now["minute"]) .. "" .. leftPad(now["second"])
 	return filename
 end
 

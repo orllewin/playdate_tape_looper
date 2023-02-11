@@ -2,10 +2,13 @@ import 'Audio/sample_buffer'
 
 class('Player').extends()
 
-function Player:init(buffer)
+function Player:init(playbackListener, uiToggleListener)
 	Player.super.init(self)
 	
-	self.samplePlayer = playdate.sound.sampleplayer.new(buffer)
+	self.playbackListener = playbackListener
+	self.uiToggleListener = uiToggleListener
+	
+	self.samplePlayer = nil
 	
 	self.loopStartSet = false
 	self.loopStart = -1
@@ -37,18 +40,22 @@ function Player:hasLoop()
 	end
 end
 
+function Player:getBuffer()
+	return self.samplePlayer:getSample()
+end
+
 function Player:getLoopBuffer()
 	if self:hasLoopStart() and self:hasLoopEnd() then
 		-- Full loop
-		return self.samplePlayer:getSubsample(self.loopStartFrame, self.loopEndFrame)
+		return self.samplePlayer:getSample():getSubsample(self.loopStartFrame, self.loopEndFrame)
 	elseif self:hasLoopStart() then
 		-- Loop start only
 		local sampleRate = playdate.sound.getSampleRate()
 		local frames = samplePlayer:getLength() * sampleRate
-		return buffer:getSubsample(self.loopStartFrame, frames)
+		return self.samplePlayer:getSample():getSubsample(self.loopStartFrame, frames)
 	else
 		-- Loop end only
-		return buffer:getSubsample(0, self.loopEndFrame)
+		return self.samplePlayer:getSample():getSubsample(0, self.loopEndFrame)
 	end
 end
 
@@ -117,32 +124,55 @@ function Player:getOffset()
 end
 
 function Player:isPlaying()
-	return self.samplePlayer:isPlaying()
+	if(self.samplePlayer)then
+		return self.samplePlayer:isPlaying()
+	else
+		return false
+	end
+	
 end
 
-function Player:draw()
-	if(not self:isPlaying())then return end
+xAnchor = 10
+yAnchor = 10
+tapeHeight = 55
+tapeWidth = 260
 
+function Player:draw()
+
+	
+	if(not self:isPlaying())then return end
+	playdate.graphics.setColor(playdate.graphics.kColorWhite)
+	fill(0.5)
+	playdate.graphics.drawRect(xAnchor, yAnchor, tapeWidth, tapeHeight)
+	
+	playdate.graphics.setColor(playdate.graphics.kColorWhite)
+	
 	local sampleLength = self:getLength()
 	local playbackElapsed = self:getOffset()
-	local playbackHeadX = map(playbackElapsed, 0, sampleLength, 60, 340)
+	local playbackHeadX = map(playbackElapsed, 0, sampleLength, xAnchor, tapeWidth + xAnchor)
+	local caretHeight = 7
+	local caretWidth = 7
 	
+	--draw main progress
 	if(self:hasLoopStart())then
 		fill(0.25)
-		rect(self.loopStartX, 15, (playbackHeadX - self.loopStartX), 40)
-		
-		fill(1)
-		line(self.loopStartX, 15, self.loopStartX, 55)
-		triangle(self.loopStartX, 29, self.loopStartX, 41, self.loopStartX + 7, 35)
+		rect(self.loopStartX, yAnchor, (playbackHeadX - self.loopStartX), tapeHeight)
 	else
 		fill(0.25)
-		rect(60, 15, (playbackHeadX - 60), 40)
+		rect(xAnchor, yAnchor, (playbackHeadX - xAnchor), tapeHeight)
+	end
+
+	--draw loop indicators
+	if(self:hasLoopStart())then		
+		playdate.graphics.setColor(playdate.graphics.kColorWhite)
+		line(self.loopStartX, yAnchor, self.loopStartX, yAnchor + tapeHeight)
+		triangle(self.loopStartX, yAnchor + (tapeHeight/2 - caretHeight/2), self.loopStartX, yAnchor + (tapeHeight/2 + caretHeight/2), self.loopStartX + caretWidth, yAnchor + (tapeHeight/2))
 	end
 	
 	if(self:hasLoopEnd())then
-		fill(1)
-		line(self.loopEndX, 15, self.loopEndX, 55)
-		triangle(self.loopEndX, 30, self.loopEndX, 40, self.loopEndX - 5, 35)
+		playdate.graphics.setColor(playdate.graphics.kColorWhite)
+		line(self.loopEndX, yAnchor, self.loopEndX, yAnchor + tapeHeight)
+		triangle(self.loopEndX, yAnchor + (tapeHeight/2 - caretHeight/2), self.loopEndX, yAnchor + (tapeHeight/2 + caretHeight/2), self.loopEndX - caretWidth, yAnchor + (tapeHeight/2))
 	end
 end
 
@@ -177,6 +207,11 @@ function Player:setLoopPoints()
 	end
 end
 
+-- xAnchor = 10
+-- yAnchor = 10
+-- tapeHeight = 55
+-- tapeWidth = 260
+
 function Player:getInputHandler()
 	return {
 		leftButtonDown = function()
@@ -192,7 +227,7 @@ function Player:getInputHandler()
 				self.loopStartSet = false
 			else
 				self.loopStart = self.samplePlayer:getOffset()
-				self.loopStartX = map(self.loopStart, 0, self.samplePlayer:getLength(), 60, 340)
+				self.loopStartX = map(self.loopStart, 0, self.samplePlayer:getLength(), xAnchor, xAnchor + tapeWidth)
 				self.loopStartFrame = math.floor(self.loopStart * playdate.sound.getSampleRate())
 				if(self.loopEndSet) then
 					self.samplePlayer:setPlayRange(self.loopStartFrame, self.loopEndFrame)
@@ -217,7 +252,7 @@ function Player:getInputHandler()
 				self.loopEndSet = false
 			else
 				self.loopEnd = self.samplePlayer:getOffset()
-				self.loopEndX = map(self.loopEnd, 0, self.samplePlayer:getLength(), 60, 340)
+				self.loopEndX = map(self.loopEnd, 0, self.samplePlayer:getLength(), xAnchor, xAnchor + tapeWidth)
 				self.loopEndFrame = math.floor(self.loopEnd * playdate.sound.getSampleRate())
 				if(self.loopStartSet)then
 					self.samplePlayer:setPlayRange(self.loopStartFrame, self.loopEndFrame)
@@ -237,11 +272,16 @@ function Player:getInputHandler()
 		downButtonDown = function()
 			self:resetPlaybackRate()
 		end,
+		BButtonDown = function()
+			if self.uiToggleListener then self.uiToggleListener() end
+		end,
 		AButtonUp = function()
 			if(self:isPlaying())then
 				self:stop()
+				self.playbackListener(false)
 			else
 				self:play()
+				self.playbackListener(true)
 			end
 		end,
 		AButtonHeld = function()

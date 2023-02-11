@@ -1,7 +1,7 @@
 class('SampleBuffer').extends()
 
 local Seconds16bitStereo = 45
-local Seconds16bitMono = 10--todo - SHOULD BE 90!!!!!!! using 10 for dev while I have old sample as well as new
+local Seconds16bitMono = 90
 local Seconds8bitMono = 180
 local Seconds8bitStereo = 90
 
