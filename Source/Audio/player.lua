@@ -2,11 +2,12 @@ import 'Audio/sample_buffer'
 
 class('Player').extends()
 
-function Player:init(playbackListener, uiToggleListener)
+function Player:init(playbackListener, uiToggleListener, switchToRecordListener)
 	Player.super.init(self)
 	
 	self.playbackListener = playbackListener
 	self.uiToggleListener = uiToggleListener
+	self.switchToRecordListener = switchToRecordListener
 	
 	self.samplePlayer = nil
 	
@@ -72,7 +73,7 @@ function Player:softReset()
 end
 
 function Player:isEmpty()
-	if self.samplePlayer:getLength() == 0 then
+	if self.samplePlayer == nil or self.samplePlayer:getLength() == 0 then
 		return true
 	else
 		return false
@@ -277,7 +278,12 @@ function Player:getInputHandler()
 			self:resetPlaybackRate()
 		end,
 		BButtonDown = function()
-			if self.uiToggleListener then self.uiToggleListener() end
+			if self:isPlaying() then
+				if self.uiToggleListener then self.uiToggleListener() end
+			else
+				-- B pressed while not playing anything - return to record mode
+				if self.switchToRecordListener then self.switchToRecordListener() end
+			end
 		end,
 		AButtonUp = function()
 			if(self:isPlaying())then
@@ -297,7 +303,8 @@ function Player:getInputHandler()
 end
 
 function Player:windDownAndStop()
-	local windDownTimer = playdate.timer.new(1000, self.samplePlayer:getRate(), 0, playdate.easingFunctions.easeInCirc)
+	--see https://easings.net/en for other easing options
+	local windDownTimer = playdate.timer.new(500, self.samplePlayer:getRate(), 0, playdate.easingFunctions.easeInQuad)
 	windDownTimer.timerEndedCallback = function()
 		self:softReset()
 		self:stop()

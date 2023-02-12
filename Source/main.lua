@@ -25,6 +25,7 @@ import 'Views/label'
 import 'Views/visibility_manager'
 import 'Views/two_part_effect'
 import 'Views/vertical_slider'
+import 'Views/mini_modal'
 
 fff = playdate.graphics.font.new("Fonts/font-rains-1x")--some bug or other, somewhere, fixed with a global font
 font = playdate.graphics.font.new("Fonts/font-rains-1x")
@@ -100,14 +101,29 @@ end, function()
 		-- loop mode
 		focusManager:unfocus()
 		focusManager:pop()-- input return to player
-		controls:setPlayingLooper() -- no playing callback anywhere?
+		controls:setPlayingLooper()
 	else
 		-- efx mode
 		focusManager:start()
 		focusManager:push()-- focus manager is now handling all input
-		controls:setPlayingEffects() -- no playing callback anywhere?
+		controls:setPlayingEffects() 
 	end
-end)
+end, function()
+		-- switch to record
+		local miniModal = MiniModal(232, font)
+		miniModal:show("Sure?", function(confirmed)
+			print("moadl confirmed: " .. tostring(confirmed))
+			if confirmed == true then
+				visibilityManager:hide()
+				controls:setRecordReady()
+				focusManager:pop()
+				player:pop()
+				spindles:recordingMode()
+				pushIdle()
+			end
+		end)
+
+	end)
 
 volumeSlider = VerticalSlider(365, 145, 1.0, function(volume)
 	player:setVolume(volume)
@@ -132,7 +148,6 @@ visibilityManager:addViews(delayTapEffect:getViews())
 visibilityManager:addViews(volumeSlider:getViews())
 
 local recorder = Recorder(function(recording, elapsed)
-		print("rec elapsed: " .. elapsed)
 		if(not recording)then recordingCompleteCallback() end
 end)
 
@@ -209,12 +224,16 @@ local menuItem, error = menu:addMenuItem("Load sample", function()
 			spindles:playMode()
 			controls:setPlayReady()
 			visibilityManager:show()
-			toast.setText("" .. selectedFile .. " inserted")
+			toast.setText("" .. selectedFile .. " loaded")
 			print("File browser selected file: " .. selectedFile)
 			state= SAMPLE_LOADED
 		end)
 		state = LOAD_SAMPLE
 end)
+
+function pushIdle()
+	idle:push()
+end
 
 function playdate.update()
 	local change = crankChange()
