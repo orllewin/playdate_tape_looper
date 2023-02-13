@@ -9,12 +9,14 @@ function TwoPartEffect:init(font, location, topLabel, bottomLabel)
 	self.mixListener = nil
 	
 	self.effectLabel = Label(location.x, location.y, topLabel, font)
+	self.effectLabel:setOpacity(0.4)
 	self.amountEncoder = RotaryEncoder(location.x, 	location.y + 30, function(value)
 		print(value)
 		if(self.amountListener ~= nil)then self.amountListener(value) end
 	end, font)
 	
 	self.mixLabel = Label(location.x, location.y + 75, bottomLabel, font)
+	self.mixLabel:setOpacity(0.4)
 	self.mixEncoder = RotaryEncoder(location.x, 	location.y + 105, function(value)
 		print(value)
 		if(self.mixListener ~= nil)then self.mixListener(value) end

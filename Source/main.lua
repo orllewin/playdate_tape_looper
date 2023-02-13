@@ -122,12 +122,26 @@ end, function()
 				pushIdle()
 			end
 		end)
-
-	end)
-
-volumeSlider = VerticalSlider(365, 145, 1.0, function(volume)
-	player:setVolume(volume)
+end, function() 
+	-- Playback reset listener
+	resetUIRate()
 end)
+
+volumeLabel = Label(367, 76, "Vol.", fff)
+volumeLabel:setOpacity(0.4)
+volumeSlider = VerticalSlider(365, 145, 100.0, 0.0, 100.0, function(volume)
+	player:setVolume(volume)
+end, false)
+
+rateLabel = Label(306, 76, "Rate", fff)
+rateLabel:setOpacity(0.4)
+rateSlider = VerticalSlider(305, 145, 1.0, -2.0, 2.0, function(rate)
+	player:setRate(rate)
+end, true)
+
+function resetUIRate()
+	rateSlider:setValue(1.0)
+end
 
 playdate.graphics.setFont(font)
 
@@ -139,13 +153,18 @@ focusManager:addView(delayEffect:getTopFocusView(), 1)
 focusManager:addView(delayEffect:getBottomFocusView(), 2)
 focusManager:addView(delayTapEffect:getTopFocusView(), 1)
 focusManager:addView(delayTapEffect:getBottomFocusView(), 2)
+focusManager:addView(rateSlider, 1)
+focusManager:addView(rateSlider, 2)
 focusManager:addView(volumeSlider, 1)
 focusManager:addView(volumeSlider, 2)
+
+
 visibilityManager:addViews(bitcrusherEffect:getViews())
 visibilityManager:addViews(ringmodEffect:getViews())
 visibilityManager:addViews(delayEffect:getViews())
 visibilityManager:addViews(delayTapEffect:getViews())
 visibilityManager:addViews(volumeSlider:getViews())
+visibilityManager:addViews(rateSlider:getViews())
 
 local recorder = Recorder(function(recording, elapsed)
 		if(not recording)then recordingCompleteCallback() end
@@ -240,12 +259,8 @@ function playdate.update()
 	if focusManager:isHandlingInput() then
 		focusManager:turnFocusedView(change)
 	else
-		if(change > 0) then
-			player:incPlaybackRate(0.025)
-			toast:setText("Speed: " .. round(player:getPlaybackRate(), 2))
-		elseif (change < 0) then
-			player:decPlaybackRate(0.025)
-			toast:setText("Speed: " .. round(player:getPlaybackRate(), 2))
+		if change ~= 0.0 and player:isPlaying() then
+			rateSlider:turn(change)
 		end
 	end
 

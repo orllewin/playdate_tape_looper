@@ -2,12 +2,13 @@ import 'Audio/sample_buffer'
 
 class('Player').extends()
 
-function Player:init(playbackListener, uiToggleListener, switchToRecordListener)
+function Player:init(playbackListener, uiToggleListener, switchToRecordListener, resetListener)
 	Player.super.init(self)
 	
 	self.playbackListener = playbackListener
 	self.uiToggleListener = uiToggleListener
 	self.switchToRecordListener = switchToRecordListener
+	self.resetListener = resetListener
 	
 	self.samplePlayer = nil
 	
@@ -113,15 +114,17 @@ function Player:getPlaybackRate()
 end
 
 function Player:incPlaybackRate(amount)
-	self.samplePlayer:setRate(self:getPlaybackRate() + amount)
+	if self.samplePlayer ~= nil then  self.samplePlayer:setRate(self:getPlaybackRate() + amount) end
 end
 
 function Player:decPlaybackRate(amount)
-	self.samplePlayer:setRate(self:getPlaybackRate() - amount)
+	if self.samplePlayer ~= nil then self.samplePlayer:setRate(self:getPlaybackRate() - amount) end
 end
 
 function Player:resetPlaybackRate()
+	print("dec sampleplayer resetPlaybackRate")
 	self.samplePlayer:setRate(1.0)
+	if(self.resetListener ~= nil)then self.resetListener() end
 end
 
 function Player:getOffset()
@@ -304,7 +307,7 @@ end
 
 function Player:windDownAndStop()
 	--see https://easings.net/en for other easing options
-	local windDownTimer = playdate.timer.new(500, self.samplePlayer:getRate(), 0, playdate.easingFunctions.easeInQuad)
+	local windDownTimer = playdate.timer.new(500, self.samplePlayer:getRate(), 0, playdate.easingFunctions.easeOutQuad)
 	windDownTimer.timerEndedCallback = function()
 		self:softReset()
 		self:stop()

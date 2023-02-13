@@ -16,6 +16,11 @@ function Label:init(x, y, text, font)
 	self:add()
 end
 
+function Label:setOpacity(opacity)
+	self.opacity = opacity
+	self:redraw()
+end
+
 function Label:setText(text)
 	if(self.text == text)then return end
 	self.text = text
@@ -27,7 +32,16 @@ function Label:redraw()
 	local width, height = playdate.graphics.getTextSize(self.text, self.fontFamily)
 	local image = playdate.graphics.image.new(width, height)
 	playdate.graphics.pushContext(image)
-		self.font:drawText(self.text, 0, 0)
+		if(self.opacity ~= nil)then
+			local faded = playdate.graphics.image.new(width, height)
+			playdate.graphics.pushContext(faded)
+				self.font:drawText(self.text, 0, 0)
+			playdate.graphics.popContext()
+			faded:drawFaded(0, 0, self.opacity, playdate.graphics.image.kDitherTypeBayer2x2)
+		else
+			self.font:drawText(self.text, 0, 0)
+		end
+		
 	playdate.graphics.popContext()
 	self:moveTo(self.origX, self.origY)
 	self:setImage(image)
