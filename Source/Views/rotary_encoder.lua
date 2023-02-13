@@ -89,5 +89,5 @@ function RotaryEncoder:updateLabel()
 end
 
 function RotaryEncoder:getLabel()
-	return "" .. round(map(self:getRotation(), 0, 300, 0.0, 1.0), 2)
+	return "" .. string.format("%.2f", round(map(self:getRotation(), 0, 300, 0.0, 1.0), 2))
 end
