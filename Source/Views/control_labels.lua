@@ -5,6 +5,7 @@ local STATE_REC_READY, STATE_REC, STATE_PLAY_READY, STATE_PLAYING_LOOPER, STATE_
 local INACTIVE = playdate.graphics.image.kDitherTypeBayer2x2
 
 local textY = 233
+local nudge = 3
 
 function ControlLabels:init(font)
 	ControlLabels.super.init(self)
@@ -24,11 +25,11 @@ function ControlLabels:setRecordReady()
 	local image = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 	playdate.graphics.pushContext(image)
 		playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
-		self.font:drawText("REC.", 7, 0)
+		self.font:drawText("REC.", 7 + nudge, 0)
 		
 		local playFaded = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 		playdate.graphics.pushContext(playFaded)
-			self.font:drawText("PLAY", 10, 0)
+			self.font:drawText("PLAY", 10 + nudge, 0)
 		playdate.graphics.popContext()
 		playFaded:drawFaded(90, 0, 0.35, INACTIVE)
 		
@@ -44,11 +45,11 @@ function ControlLabels:setRecording()
 	local image = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 	playdate.graphics.pushContext(image)
 		playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
-		self.font:drawText("STOP", 6, 0)
+		self.font:drawText("STOP", 6 + nudge, 0)
 		
 		local playFaded = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 		playdate.graphics.pushContext(playFaded)
-			self.font:drawText("PLAY", 6, 0)
+			self.font:drawText("PLAY", 6 + nudge, 0)
 		playdate.graphics.popContext()
 		playFaded:drawFaded(93, 0, 0.35, INACTIVE)
 		
@@ -64,11 +65,11 @@ function ControlLabels:setPlayReady()
 	local image = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 	playdate.graphics.pushContext(image)
 		playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
-		self.font:drawText("REC.", 6, 0)
+		self.font:drawText("REC.", 6 + nudge, 0)
 		
 		local playFaded = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 		playdate.graphics.pushContext(playFaded)
-			self.font:drawText("PLAY", 6, 0)
+			self.font:drawText("PLAY", 6 + nudge, 0)
 		playdate.graphics.popContext()
 		playFaded:draw(93, 0)
 		
@@ -87,13 +88,13 @@ function ControlLabels:setPlayingLooper()
 		playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)		
 		local recFaded = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 		playdate.graphics.pushContext(recFaded)
-			self.font:drawText("EFX", 6, 0)
+			self.font:drawText("EFX", 6 + nudge, 0)
 		playdate.graphics.popContext()
 		recFaded:draw(0, 0)
 		
 		local playFaded = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 		playdate.graphics.pushContext(playFaded)
-			self.font:drawText("STOP", 6, 0)
+			self.font:drawText("STOP", 6 + nudge, 0)
 		playdate.graphics.popContext()
 		playFaded:draw(93, 0)
 		
@@ -112,13 +113,13 @@ function ControlLabels:setPlayingEffects()
 		playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)		
 		local recFaded = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 		playdate.graphics.pushContext(recFaded)
-			self.font:drawText("LOOP", 6, 0)
+			self.font:drawText("LOOP", 6 + nudge, 0)
 		playdate.graphics.popContext()
 		recFaded:draw(0, 0)
 		
 		local playFaded = playdate.graphics.image.new(self.viewWidth, self.viewHeight)
 		playdate.graphics.pushContext(playFaded)
-			self.font:drawText("STOP", 6, 0)
+			self.font:drawText("STOP", 6 + nudge, 0)
 		playdate.graphics.popContext()
 		playFaded:draw(93, 0)
 		

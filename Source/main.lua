@@ -165,6 +165,8 @@ visibilityManager:addViews(delayEffect:getViews())
 visibilityManager:addViews(delayTapEffect:getViews())
 visibilityManager:addViews(volumeSlider:getViews())
 visibilityManager:addViews(rateSlider:getViews())
+visibilityManager:addView(rateLabel)
+visibilityManager:addView(volumeLabel)
 
 local recorder = Recorder(function(recording, elapsed)
 		if(not recording)then recordingCompleteCallback() end
