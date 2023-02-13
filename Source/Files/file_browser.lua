@@ -12,7 +12,7 @@ function AudioFileBrowser:init(_font)
 	
 	font = _font
 	self.loadSampleGridview = playdate.ui.gridview.new(loadWindowWidth-16, 25)
-	self.loadSampleGridview.backgroundImage = playdate.graphics.nineSlice.new('Images/shadowbox', 4, 4, 45, 45)
+	self.loadSampleGridview.backgroundImage = playdate.graphics.image.new('Images/black')
 	self.loadSampleGridview:setNumberOfColumns(1)
 	self.loadSampleGridview:setSectionHeaderHeight(28)
 	self.loadSampleGridview:setContentInset(4, 4, 4, 4)--left, right, top, bottom
@@ -21,25 +21,26 @@ function AudioFileBrowser:init(_font)
 	
 	function self.loadSampleGridview:drawCell(section, row, column, selected, x, y, width, height)			
 			local file = audioFiles[row]
-			if selected then
-				selectedFile = file
-				fill(1)
-				roundedRect(x, y, width, height, 5)
-				playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
-			else
-				fill(0)
-				playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillBlack)
-			end
-	
 			local filename = tostring(file)
 			local cellText = replace(filename, "_", " ")--Playdate turns _text_ into italics... so strip any underscores out
-			--playdate.graphics.setFont(font)
-			font:drawText("" .. row .. ". " .. cellText, x + 8, y + 9)
+			
+			if selected then
+				selectedFile = file
+				playdate.graphics.setColor(playdate.graphics.kColorWhite)
+				playdate.graphics.fillRoundRect(x, y, width, height, 5)
+				
+				playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillBlack)
+				font:drawText("" .. row .. ". " .. cellText, x + 8, y + 9)
+				
+			else
+				playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+				font:drawText("" .. row .. ". " .. cellText, x + 8, y + 9)
+			end
 	end
 	
 	function self.loadSampleGridview:drawSectionHeader(section, x, y, width, height)
-			--playdate.graphics.setFont(biggerFont)
-			font:drawText("Choose sample:", x + 6, y + 6)
+			playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+			font:drawText("Select sample:", x + 6, y + 6)
 	end
 
 end
