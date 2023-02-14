@@ -1,6 +1,6 @@
 class('RecordLevels').extends(playdate.graphics.sprite)
 
-local barHeight = 220
+local barHeight = 200
 local barWidth = 25
 local barTopAnchor = 10
 local barLeftAnchor = 10

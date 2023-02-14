@@ -26,6 +26,7 @@ import 'Views/visibility_manager'
 import 'Views/two_part_effect'
 import 'Views/vertical_slider'
 import 'Views/mini_modal'
+import 'Views/divider'
 
 fff = playdate.graphics.font.new("Fonts/font-rains-1x")--some bug or other, somewhere, fixed with a global font
 font = playdate.graphics.font.new("Fonts/font-rains-1x")
@@ -145,6 +146,8 @@ end
 
 playdate.graphics.setFont(font)
 
+divider = Divider(222)
+
 focusManager:addView(bitcrusherEffect:getTopFocusView(), 1)
 focusManager:addView(bitcrusherEffect:getBottomFocusView(), 2)
 focusManager:addView(ringmodEffect:getTopFocusView(), 1)
@@ -167,6 +170,7 @@ visibilityManager:addViews(volumeSlider:getViews())
 visibilityManager:addViews(rateSlider:getViews())
 visibilityManager:addView(rateLabel)
 visibilityManager:addView(volumeLabel)
+--visibilityManager:addView(divider)
 
 local recorder = Recorder(function(recording, elapsed)
 		if(not recording)then recordingCompleteCallback() end
