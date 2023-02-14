@@ -2,7 +2,6 @@ class('Divider').extends(playdate.graphics.sprite)
 
 function Divider:init(y)
 	Divider.super.init(self)
-print("divvv")
 	local dividerImage = playdate.graphics.image.new(400, 3)
 	playdate.graphics.pushContext(dividerImage)
 			local lineImage = playdate.graphics.image.new(400, 3)
